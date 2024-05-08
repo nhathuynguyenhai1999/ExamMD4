@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product Manager | Nguyen Hai Nhat Huy | Webstorm Projects</title>
+     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<style>
+    #display-create{
+        display: none;
+        float: left;
+    }
+
+
+    #display-list {
+        width: 600px;
+        margin: auto;
+        border: 2px solid;
+        border-collapse: collapse;
+    }
+
+    #display-list tr, #display-list th, #display-list td {
+        border: 1px solid;
+        border-collapse: collapse;
+        padding-left: 10px;
+    }
+
+    .btn {
+        text-align: center;
+    }
+
+    button {
+        margin: 10px;
+    }
+
+    #div-btn {
+        width: 100%;
+        margin-left: 470px;
+        margin-bottom: 10px;
+
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    #title {
+        display: none;
+    }
+
+    #add-product {
+        display: none;
+        width: 300px;
+        margin: auto;
+    }
+
+    #edit-product{
+        /*display: none;*/
+        width: 300px;
+        margin : auto;
+    }
+</style>
+<body>
+    <form id="add-product">
+        <h1>Form Create</h1>
+        <table>
+            <tr>
+                <td><label for="producer">Producer:</label></td>
+                <td><input type="text" id="producer" placeholder="producer"></td>
+            </tr>
+            <tr>
+                <td><label for="model">Model:</label></td>
+                <td><input type="text" id="model" placeholder="model"></td>
+            </tr>
+            <tr>
+                <td><label for="price">Price:</label></td>
+                <td><input type="text" id="price" placeholder="price"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td><input type="submit" value="Add" onclick="addNewProduct()"></td>
+            </tr>
+        </table>
+    </form>
+    <h1 id="title">List Product</h1>
+    <div id="productList">
+    </div>
+    <div id="edit-product"></div>
+
+    <div id="div-btn">
+        <button onclick="successHandler()" id="display">Display list product</button>
+        <button onclick="displayFormCreate()" id="display-create">Create new product</button>
+    </div>
+    <script>
+        function addNewProduct(){
+            event.preventDefault();
+                let producer = document.getElementById("producer").value;
+                let model = document.getElementById("model").value;
+                let price = document.getElementById("price").value;
+
+                let newProduct = {
+                    "producer": producer,
+                    "model": model,
+                    "price": price
+                };
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: 'POST',
+                data: JSON.stringify(newProduct),
+                url: "http://localhost:8080/api/products",
+                success: successHandler,
+            })    
+        }
+        function successHandler() {
+    $.ajax({
+        type: "GET",
+        //tên API
+        url: "http://localhost:8080/api/products",
+        //xử lý khi thành công
+        success: function (data) {
+            console.log(data);
+            // hiển thị danh sách ở đây
+            let content = ' <table id="display-list" border="1"><tr>\n' +
+                ' <th>Producer</td>\n' +
+                ' <th>Model</td>\n' +
+                ' <th>Price</td>\n' +
+                ' <th>Delete</td>\n' +
+                ' <th>Edit</td>\n' +
+                ' </tr>';
+            for (let i = 0; i < data.length; i++) {
+                content += getProduct(data[i]);
+            }
+            content += "</table>"
+            document.getElementById('productList').innerHTML = content;
+            document.getElementById('productList').style.display = "block";
+            document.getElementById('add-product').style.display = "none";
+            document.getElementById('edit-product').style.display = "none";
+            document.getElementById('display-create').style.display = "block";
+            document.getElementById('title').style.display = "block";
+        },
+
+        error: function(xhr, status, error){
+            console.log("xhr", xhr)
+            console.log("status", status)
+            console.log("error", error)
+        }
+
+    });
+
+
+    $.ajax("http://localhost:8080/api/products")
+        .done(function (data) {
+            console.log(data);
+            // hiển thị danh sách ở đây
+            let content = ' <table id="display-list" border="1"><tr>\n' +
+                ' <th>Producer</td>\n' +
+                ' <th>Model</td>\n' +
+                ' <th>Price</td>\n' +
+                ' <th>Delete</td>\n' +
+                ' <th>Edit</td>\n' +
+                ' </tr>';
+            for (let i = 0; i < data.length; i++) {
+                content += getProduct(data[i]);
+            }
+            content += "</table>"
+            document.getElementById('productList').innerHTML = content;
+            document.getElementById('productList').style.display = "block";
+            document.getElementById('add-product').style.display = "none";
+            document.getElementById('edit-product').style.display = "none";
+            document.getElementById('display-create').style.display = "block";
+            document.getElementById('title').style.display = "block";
+        })
+        .fail(function(xhr, status, error){
+            console.log("xhr", xhr)
+            console.log("status", status)
+            console.log("error", error)
+        })
+}
+    function getProduct(product) {
+    return `<tr>
+                <td >${product.producer}</td>
+                <td >${product.model}</td>
+                <td >${product.price}</td>` +
+        `<td class="btn"><button class="deleteProduct" onclick="deleteProduct(${product.id})">Delete</button></td>
+        <td class="btn"><button class="editProduct" onclick="formEditProduct(${product.id})">Edit</button></td>
+            </tr>`;
+}
+    function displayFormCreate(){
+        document.getElementById('productList').style.display = "none";
+    document.getElementById('add-product').style.display = "block";
+    document.getElementById('display-create').style.display = "none";
+    document.getElementById('title').style.display = "none";
+    document.getElementById('edit-product').style.display = "none";
+}
+    function deleteProduct(){
+        $.ajax({
+        type: "DELETE",
+        //tên API
+        url: `http://localhost:8080/api/products/${id}`,
+        //xử lý khi thành công
+        success: successHandler
+    });
+}
+    function getProductById(product){
+    return`<tr>
+            <td><label for="producer">Producer:</label></td>
+            <td><input type="text" id="producer-edit" value="${product.producer}"></td>
+        </tr>
+        <tr>
+            <td><label for="model">Model:</label></td>
+            <td><input type="text" id="model-edit" value="${product.model}"></td>
+        </tr>
+        <tr>
+            <td><label for="price">Price:</label></td>
+            <td><input type="text" id="price-edit" value="${product.price}"></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td><input type="submit" value="Edit" onclick="editProduct(${product.id})"></td>
+        </tr>`
+}
+    function formEditProduct(id){
+    $.ajax({
+        type: "GET",
+        //tên API
+        url: `http://localhost:8080/api/products/${id}`,
+        //xử lý khi thành công
+        success: function (data) {
+            console.log(data);
+            // hiển thị danh sách ở đây
+            let contentData ='<form id="edit-product">\n' +
+                '    <h1>Form edit</h1>\n' +
+                '    <table>\n';
+            contentData += getProductById(data);
+            contentData+='</table>\n' +
+                '</form>'
+            document.getElementById('edit-product').innerHTML = contentData;
+            document.getElementById('productList').style.display = "none";
+            document.getElementById('add-product').style.display = "none";
+            document.getElementById('display-create').style.display = "none";
+            document.getElementById('title').style.display = "none";
+            document.getElementById('edit-product').style.display = "block";
+            }
+    })
+}
+    function editProduct(id) {
+    event.preventDefault();
+    //lấy dữ liệu từ form html
+    let producer = document.getElementById("producer-edit").value;
+    let model = document.getElementById("model-edit").value;
+    let price = document.getElementById("price-edit").value;
+    let newSmartphone = {
+        "producer": producer,
+        "model": model,
+        "price": price
+    };
+    $.ajax({
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        type: "PUT",
+        data: JSON.stringify(newSmartphone),
+        //tên API
+        url: `http://localhost:8080/api/products/${id}`,
+        //xử lý khi thành công
+        success: successHandler
+
+    });
+}
+    </script>    
+</body>
+</html>
